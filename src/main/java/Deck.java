@@ -16,7 +16,7 @@ public class Deck {
         ALL_CARDS = new ArrayList<>();
         for (var suite : Suite.colors()) {
             for (var value : Value.values()) {
-                ALL_CARDS.add(new Card(value, suite));
+                ALL_CARDS.add(new Card(suite, value));
             }
         }
 
@@ -32,7 +32,7 @@ public class Deck {
     }
 
     private final LinkedList<Card> cards;
-    Random rnd = new Random(0);
+    static Random rnd = new Random(0);
 
     public Deck() {
         var unshuffled = new ArrayList<Card>(ALL_CARDS);
@@ -54,14 +54,21 @@ public class Deck {
         return cards.pollFirst();
     }
 
-    void sort()
-    {
+    void sort() {
         cards.sort(Card::compareTo);
     }
 
     @Override
     public String toString() {
-        return cards.toString();
+        var sb = new StringBuilder();
+        for (int i = 0; i < cards.size(); ++i) {
+            Card card = cards.get(i);
+            sb.append(card);
+            if ((i+1)%5 == 0) {
+                sb.append('\n');
+            }
+        }
+        return sb.toString();
     }
 
     List<Card> cards() {

@@ -11,8 +11,17 @@ public class Card implements Comparable<Card> {
     private final Suite suite;
     private final String otherName;
 
-    public Card (final Value value, final Suite suite) {
-        require(!suite.equals(Suite.OTHER) && value != null , "Value can't be null, when suite is anything other than \"OTHER\"");
+    /**
+     * Creates a card of a suite and the numeral (NOT ORDINAL!)
+     * @param suite - red, green, blue, yellow, orange, purple
+     * @param value - the values from 1 to 15
+     */
+    public Card(final Suite suite, final int value) {
+        this(suite, Value.valueOf(value - 1));
+    }
+
+    public Card(final Suite suite, final Value value) {
+        require(!suite.equals(Suite.OTHER) && value != null, "Value can't be null, when suite is anything other than \"OTHER\"");
 
         this.value = value;
         this.suite = suite;
@@ -28,7 +37,7 @@ public class Card implements Comparable<Card> {
     }
 
     public int valueAsInt() {
-        return value.value();
+        return value == null ? 16 : value.value(); // hack
     }
 
     public Value value() {
@@ -43,8 +52,7 @@ public class Card implements Comparable<Card> {
     public String toString() {
         final var name = otherName != null ? otherName : suite + " " + value;
         var color = "";
-        switch (suite)
-        {
+        switch (suite) {
             case RED -> color = Color.ANSI_RED;
             case BLUE -> color = Color.ANSI_BLUE;
             case GREEN -> color = Color.ANSI_GREEN;
@@ -85,8 +93,7 @@ public class Card implements Comparable<Card> {
 
     private int computeIntValue() {
         var intValue = this.suite.ordinal() * 15;
-        if (Suite.OTHER == this.suite)
-        {
+        if (Suite.OTHER == this.suite) {
             return intValue + (otherName.equals("JOKER") ? 1 : 2);
         }
         return intValue + valueAsInt();

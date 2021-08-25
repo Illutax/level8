@@ -1,4 +1,7 @@
 import domainvalue.Suite;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +18,7 @@ public enum Command {
     DRAW("draw"),
     DROP("drop"),
     SORT("sort"),
-    DISPLAY_HAND("display");
+    DISPLAY("display");
 
     private static final Scanner scanner = new Scanner(System.in);
     private final String value;
@@ -43,6 +46,8 @@ public enum Command {
         return command;
     }
 
+    @UnmodifiableView
+    @NotNull
     public List<String> getArgs() {
         return Collections.unmodifiableList(args);
     }

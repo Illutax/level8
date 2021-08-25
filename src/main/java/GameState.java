@@ -1,6 +1,8 @@
 import domainvalue.Suite;
 import domainvalue.Value;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +17,7 @@ public class GameState {
     public static Deck CURRENT_DECK = new Deck();
 
     private final List<Player> players;
-    private final String hexValue = "^((1[0-5]?)|[1-9])$"; // [1-15]
+    private final String STRING_VALUE_BETWEEN_1_AND_15 = "^((1[0-5]?)|[1-9])$";
     Random rnd = new Random(0);
     private boolean cardDrawn;
     private int turn;
@@ -36,11 +38,11 @@ public class GameState {
 
     public void startGameLoop() {
         // do init stuff
-        drawInitialCards();
+        drawInitialHands();
         loop();
     }
 
-    private void drawInitialCards() {
+    private void drawInitialHands() {
         for (int i = 0; i < 10; i++) {
             for (var player : players) {
                 var card = CURRENT_DECK.draw();
@@ -61,9 +63,9 @@ public class GameState {
                 Command command = Command.readCommand();
                 switch (command) {
                     case HELP -> talk(Command.helpText());
-                    case DISPLAY_HAND -> displayHand(player);
+                    case DISPLAY -> displayHand(player);
                     case DRAW -> tryDrawCard(player);
-                    case DROP -> tryDropCard(player, command.getArgs());
+                    case DROP -> tryDropCardAndNextTurn(player, command.getArgs());
                     case SORT -> sortAndDisplayHand(player, command.getArgs());
                 }
             }
@@ -75,45 +77,96 @@ public class GameState {
     }
 
     private void sortAndDisplayHand(Player player, List<String> args) {
-        player.hand.sortByValueThenBySuite(); // TODO: add parameter
+        if (args.isEmpty() || args.contains("value")) {
+            player.hand.sortByValueThenBySuite();
+        } else if (args.contains("suite")) {
+            player.hand.sortBySuiteThenByValue();
+        } else {
+            talk("Unknown sorting: \"" + args.get(0) + "\"");
+            return;
+        }
         displayHand(player);
     }
 
-    private void tryDropCard(Player player, List<String> args) {
+    private void tryDropCardAndNextTurn(Player player, List<String> args) {
         require(args, notNullValue());
 
         if (args.isEmpty()) {
             talk("You need to pass an argument to the drop command. You can drop specific cards like 'drop RED 15' or 'JOKER'. You can also do it positional 'drop 1' or 'drop first' to drop the first card");
             return;
         }
-        if (cardDrawn) {
-            Optional<Card> specificCard = tryGetSpecificCard(args);
-            if (specificCard.isPresent()) {
-                player.discard(specificCard.get());
-            } else if (args.size() == 1) {
-                Optional<Integer> position = tryParsePosition(args);
 
-                if (position.isEmpty()) {
-                    talk("Tried to parse %s as a position. This does not work; it should be a number between 1 and 15 or the words 'first', 'second', 'last'");
-                }
-            }
-        } else {
+        if (!cardDrawn) {
             talk("First draw a card, then you can drop one card.");
+            return;
+        }
+
+        // was "BLUE 15" or something similar specified?
+        Optional<Card> specificCard = tryGetSpecificCard(args);
+        if (specificCard.isPresent()) {
+            final var cardToBeDiscarded = specificCard.get();
+            tryToDiscardSpecificCardAndAdvanceTurn(player, cardToBeDiscarded);
+            return;
+        }
+
+
+        if (args.size() == 1) {
+            Optional<Integer> position = tryParsePosition(args);
+
+            if (position.isPresent()) {
+                tryToDiscardPositionalCardAndAdvanceTurn(player, position.get());
+            } else {
+                talk("Tried to parse %s as a position. This does not work; it should be a number between 1 and 15 or the words 'first', 'second', 'last'");
+            }
         }
     }
 
+    private void tryToDiscardPositionalCardAndAdvanceTurn(Player player, int cardPositionIndex) {
+        // Was it "last"?
+        if (cardPositionIndex == Integer.MAX_VALUE) {
+            final var discardedCard = player.discard(player.hand.lastCardIndex());
+            talk("Dropping " + discardedCard);
+            advanceTurn();
+        } else if (player.hand.amountOfCards() > cardPositionIndex) {
+            talk("You don't have as many cards");
+        } else {
+            final var discardedCard = player.discard(cardPositionIndex);
+            talk("Dropping " + discardedCard);
+            advanceTurn();
+        }
+    }
+
+    private void tryToDiscardSpecificCardAndAdvanceTurn(Player player, Card cardToBeDiscarded) {
+        if (player.hasCard(cardToBeDiscarded)) {
+            final var discardedCard = player.discard(cardToBeDiscarded);
+            talk("Dropping " + discardedCard);
+            advanceTurn();
+        } else {
+            talk("You don't have a " + cardToBeDiscarded);
+        }
+    }
+
+    /**
+     * Returns a value between 1 and 11 or Integer.MAX_VALUE
+     */
     private Optional<Integer> tryParsePosition(List<String> args) {
         require(args.size() == 1, "There should exactly one argument");
 
         Optional<Integer> position = Optional.empty();
+
+        // First try with integers
         final var argument = args.get(0);
         try {
             int value = Integer.parseInt(argument);
+            if (value < 0 || value > 11) {
+                return Optional.empty();
+            }
             return Optional.of(value);
         } catch (NumberFormatException ignored) {
             // does nothing
         }
 
+        // Second try with words
         switch (argument) {
             case "first" -> position = Optional.of(1);
             case "second" -> position = Optional.of(2);
@@ -123,12 +176,24 @@ public class GameState {
     }
 
     private Optional<Card> tryGetSpecificCard(List<String> args) {
+
+        // Specific one word cards
+        if (args.size() == 1) {
+            Optional<Card> otherCard = Optional.empty();
+            switch (args.get(0).toLowerCase()) {
+                case "joker" -> otherCard = Optional.of(Card.JOKER);
+                case "skip" -> otherCard = Optional.of(Card.SKIP);
+            }
+            return otherCard;
+        }
+
+        // Trying to recognize two word card description
         if (args.size() == 2) {
             var suiteStr = args.get(0);
             var valueStr = args.get(1);
 
-            boolean suiteIsNumerical = suiteStr.matches(hexValue);
-            boolean valueIsNumerical = valueStr.matches(hexValue);
+            boolean suiteIsNumerical = suiteStr.matches(STRING_VALUE_BETWEEN_1_AND_15);
+            boolean valueIsNumerical = valueStr.matches(STRING_VALUE_BETWEEN_1_AND_15);
 
             // did the user swapped them accidentally?
             if (suiteIsNumerical && !valueIsNumerical) {
@@ -136,44 +201,44 @@ public class GameState {
                 valueStr = args.get(0);
                 suiteStr = args.get(1);
 
-                // swap the bools
-                var tmp = suiteIsNumerical;
-                suiteIsNumerical = valueIsNumerical;
-                valueIsNumerical = tmp;
+                // also swap the value for valueIsNumerical, because we need it later
+                valueIsNumerical = suiteIsNumerical;
             }
 
-            Suite suite = null;
-            if (Suite.isValid(suiteStr)) {
-                suite = Suite.valueOf(suiteStr.toUpperCase());
+            Optional<Suite> suite = tryParseSuite(suiteStr);
+            Optional<Value> value = tryParseValue(valueStr, valueIsNumerical);
+
+            if (suite.isPresent() && value.isPresent()) {
+                return Optional.of(new Card(suite.get(), value.get()));
             }
 
-            Value value = null;
-            if (valueIsNumerical) {
-                require(valueStr.matches(hexValue), "Should never fail");
-                final var valueAsInt = Integer.parseInt(valueStr);
-                require(Value.isValid(valueAsInt), "Should never fail aswell");
-
-                value = Value.valueOf(valueAsInt);
-            }
-
-            if (suite != null && value != null) {
-                return Optional.of(new Card(suite, value));
-            }
-
-            if (suite == null) {
+            if (suite.isEmpty()) {
                 talk("Tried to parse " + suiteStr + " as suite. Valid suites are " + Suite.commaSeparatedValues());
             }
 
-            if (value == null) {
+            if (value.isEmpty()) {
                 talk("Tried to parse " + valueStr + " as value. Valid values are " + Value.commaSeparatedValues());
             }
-        } else if (args.size() == 1) {
-            Optional<Card> otherCard = Optional.empty();
-            switch (args.get(0).toLowerCase()) {
-                case "joker" -> otherCard = Optional.of(Card.JOKER);
-                case "skip" -> otherCard = Optional.of(Card.SKIP);
-            }
-            return otherCard;
+        }
+
+        return Optional.empty();
+    }
+
+    @NotNull
+    private Optional<Suite> tryParseSuite(String suiteStr) {
+        return Suite.isValid(suiteStr)
+                ? Optional.of(Suite.valueOf(suiteStr.toUpperCase()))
+                : Optional.empty();
+    }
+
+    @NotNull
+    private Optional<Value> tryParseValue(String valueStr, boolean valueIsNumerical) {
+        if (valueIsNumerical) {
+            require(valueStr.matches(STRING_VALUE_BETWEEN_1_AND_15), "Should never fail");
+            final var valueAsInt = Integer.parseInt(valueStr);
+            require(Value.isValid(valueAsInt), "Should never fail aswell");
+
+            return Optional.of(Value.valueOf(valueAsInt));
         }
 
         return Optional.empty();
@@ -188,9 +253,11 @@ public class GameState {
         }
     }
 
-
+    @SneakyThrows(InterruptedException.class)
     private void advanceTurn() {
         turn = (++turn) % players.size();
+        talk("It's " + players.get(turn) + " turn");
+        wait(3000);
     }
 
     private void talk(final String dialog) {

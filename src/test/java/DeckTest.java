@@ -76,10 +76,10 @@ class DeckTest {
                               [[34mBLUE 8[0m][[31mRED 5[0m][[32mGREEN 15[0m]"""));
     }
 
-    private Deck makeDeck() {
+    static Deck makeDeck() {
         var prevRnd = Deck.rnd;
         Deck.rnd = new Random(123456789);
-        var deck = new Deck();
+        final var deck = new Deck();
         Deck.rnd = prevRnd; // is there a better way?
 
         return deck;

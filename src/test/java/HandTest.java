@@ -89,10 +89,7 @@ class HandTest {
     }
 
     private Hand makeHand() {
-        var prevRnd = Deck.rnd;
-        Deck.rnd = new Random(123456789);
-        final var deck = new Deck();
-        Deck.rnd = prevRnd; // is there a better way?
+        final var deck = DeckTest.makeDeck();
 
         final var hand = new Hand();
         for (int i = 10; i > 0; --i) {

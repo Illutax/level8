@@ -47,6 +47,9 @@ public class Player {
         return hand.discard(card);
     }
 
+    /**
+     * Removes the card at index i, where 0 <= i <= card.size()
+     */
     protected Card discard(int cardIndex) {
         return hand.discard(cardIndex);
     }
@@ -67,5 +70,10 @@ public class Player {
 
     public String printableName() {
         return name;
+    }
+
+    public boolean hasCard(Card card) {
+        return hand.cards()
+                .contains(card);
     }
 }

@@ -26,6 +26,9 @@ public class Hand {
         return card; //remove?
     }
 
+    /**
+     * Removes the card at index i, where 0 <= i <= card.size()
+     */
     public Card discard(int cardIndex) {
         require(cards.size() > cardIndex, String.format("Can't discard (%s), what you dont have (>%s)  ¯\\_(ツ)_/¯", cardIndex, cards.size()));
 
@@ -59,5 +62,9 @@ public class Hand {
 
     public boolean isEmpty() {
         return cards.isEmpty();
+    }
+
+    public int lastCardIndex() {
+        return amountOfCards() - 1;
     }
 }

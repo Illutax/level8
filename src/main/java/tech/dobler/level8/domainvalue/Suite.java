@@ -1,4 +1,4 @@
-package domainvalue;
+package tech.dobler.level8.domainvalue;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;

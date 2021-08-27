@@ -1,4 +1,4 @@
-package domainvalue;
+package tech.dobler.level8.domainvalue;
 
 public class Level
 {

@@ -1,5 +1,8 @@
-import domainvalue.Suite;
-import domainvalue.Value;
+package tech.dobler.level8;
+
+import tech.dobler.level8.Card;
+import tech.dobler.level8.domainvalue.Suite;
+import tech.dobler.level8.domainvalue.Value;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;

@@ -1,5 +1,7 @@
-import domainvalue.Suite;
-import domainvalue.Value;
+package tech.dobler.level8;
+
+import tech.dobler.level8.domainvalue.Suite;
+import tech.dobler.level8.domainvalue.Value;
 
 import static org.valid4j.Assertive.require;
 

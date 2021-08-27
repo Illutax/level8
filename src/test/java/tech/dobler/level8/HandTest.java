@@ -1,10 +1,11 @@
-import domainvalue.Suite;
+package tech.dobler.level8;
+
+import tech.dobler.level8.domainvalue.Suite;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.valid4j.errors.RequireViolation;
 
 import java.util.List;
-import java.util.Random;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;

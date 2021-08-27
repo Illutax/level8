@@ -1,4 +1,4 @@
-package domainvalue;
+package tech.dobler.level8.domainvalue;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;

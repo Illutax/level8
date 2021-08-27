@@ -1,4 +1,8 @@
-import domainvalue.Suite;
+package tech.dobler.level8;
+
+import tech.dobler.level8.Card;
+import tech.dobler.level8.Deck;
+import tech.dobler.level8.domainvalue.Suite;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 

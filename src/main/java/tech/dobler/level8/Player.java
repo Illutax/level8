@@ -1,4 +1,6 @@
-import domainvalue.Level;
+package tech.dobler.level8;
+
+import tech.dobler.level8.domainvalue.Level;
 
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.valid4j.Assertive.require;

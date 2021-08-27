@@ -34,9 +34,9 @@ public enum Value {
     }
 
     public static Value valueOf(final int value) {
-        require(0 < value && value <= Value.values().length, String.format("Value should be in bound: (%d;%d]",0, Value.values().length));
+        require(0 <= value && value < Value.values().length + 1, String.format("Value should be in bound: (%d;%d]", 0, Value.values().length));
 
-        return Value.values()[value];
+        return Value.values()[value - 1];
     }
 
     public static boolean isValid(Integer value) {

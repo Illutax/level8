@@ -22,17 +22,17 @@ public class GameState {
     private boolean cardDrawn;
     private int turn;
 
-    private GameState() {
-        this(false);
+    private GameState(final String playerName) {
+        this(playerName, false);
     }
 
-    public GameState(boolean cheats) {
+    public GameState(final String playerName, boolean cheats) {
         CURRENT_GAME = this;
         Bot bot = Player.newBot();
         if (cheats) {
             bot.letMePeek();
         }
-        players = List.of(bot, Player.newHuman("gary"));
+        players = List.of(bot, Player.newHuman(playerName));
         turn = rnd.nextInt(players.size());
     }
 
@@ -54,16 +54,18 @@ public class GameState {
     private void loop() {
         while (true) {
             final var player = players.get(turn);
-            talk("It's " + player.printableName() + " turn.");
+            talk("It's " + player.printableName() + "s turn.");
 
             if (player.isBot()) {
                 var bot = (Bot) player;
                 bot.doBotTurn();
+                advanceTurn();
             } else {
                 Command command = Command.readCommand();
                 switch (command) {
                     case HELP -> talk(Command.helpText());
                     case DISPLAY -> displayHand(player);
+                    case GOAL -> displayCurrentGoal(player);
                     case DRAW -> tryDrawCard(player);
                     case DROP -> tryDropCardAndNextTurn(player, command.getArgs());
                     case SORT -> sortAndDisplayHand(player, command.getArgs());
@@ -72,14 +74,24 @@ public class GameState {
         }
     }
 
-    private void displayHand(Player player) {
+    private void displayCurrentGoal(final Player player)
+    {
+        talk("You have to get " + player.currentLevel());
+    }
+
+    private void displayHand(Player player)
+    {
         talk("Your hand is: " + player.hand);
     }
 
-    private void sortAndDisplayHand(Player player, List<String> args) {
-        if (args.isEmpty() || args.contains("value")) {
+    private void sortAndDisplayHand(Player player, List<String> args)
+    {
+        if (args.isEmpty() || args.contains("value"))
+        {
             player.hand.sortByValueThenBySuite();
-        } else if (args.contains("suite")) {
+        }
+        else if (args.contains("suite"))
+        {
             player.hand.sortBySuiteThenByValue();
         } else {
             talk("Unknown sorting: \"" + args.get(0) + "\"");
@@ -115,8 +127,12 @@ public class GameState {
 
             if (position.isPresent()) {
                 tryToDiscardPositionalCardAndAdvanceTurn(player, position.get());
-            } else {
-                talk("Tried to parse %s as a position. This does not work; it should be a number between 1 and 15 or the words 'first', 'second', 'last'");
+            } else
+            {
+                talk("Tried to drop \"" + args.get(0) + "\". This does not work; it should be a number between 1 and 15 or the words 'first', 'second', 'last'");
+                Random tmpRnd = new Random();
+                final var randomPlayerCard = player.hand.cards().get(tmpRnd.nextInt(player.hand.amountOfCards()));
+                talk("You can also drop cards by saying \"drop " + randomPlayerCard.suite() + " " + randomPlayerCard.valueAsInt() + "\"");
             }
         }
     }
@@ -127,7 +143,7 @@ public class GameState {
             final var discardedCard = player.discard(player.hand.lastCardIndex());
             talk("Dropping " + discardedCard);
             advanceTurn();
-        } else if (player.hand.amountOfCards() > cardPositionIndex) {
+        } else if (!(player.hand.amountOfCards() - 1 + 1 >= cardPositionIndex + 1)) {
             talk("You don't have as many cards");
         } else {
             final var discardedCard = player.discard(cardPositionIndex);
@@ -247,17 +263,21 @@ public class GameState {
     private void tryDrawCard(final Player player) {
         if (cardDrawn) {
             talk("You can only draw one card per round.");
-        } else {
+        } else
+        {
             final var card = CURRENT_DECK.draw();
             player.addCard(card);
+            talk("You've drawn " + card);
+            cardDrawn = true;
         }
     }
 
     @SneakyThrows(InterruptedException.class)
     private void advanceTurn() {
         turn = (++turn) % players.size();
-        talk("It's " + players.get(turn) + " turn");
-        wait(3000);
+//        talk("It's " + players.get(turn) + " turn");
+        cardDrawn = false;
+        Thread.sleep(500);
     }
 
     private void talk(final String dialog) {

@@ -17,7 +17,7 @@ public class Card implements Comparable<Card> {
      * @param value - the values from 1 to 15
      */
     public Card(final Suite suite, final int value) {
-        this(suite, Value.valueOf(value - 1));
+        this(suite, Value.valueOf(value));
     }
 
     public Card(final Suite suite, final Value value) {

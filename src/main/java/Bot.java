@@ -1,3 +1,4 @@
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Random;
@@ -13,8 +14,12 @@ public class Bot extends Player {
         super(name, true);
     }
 
+    @SneakyThrows(InterruptedException.class)
     public void doBotTurn() {
         doRobotSounds();
+
+        //thinking
+        Thread.sleep(500);
 
         final var drawnCard = GameState.CURRENT_DECK.draw();
         if (openHand) {
@@ -22,8 +27,14 @@ public class Bot extends Player {
         }
         addCard(drawnCard);
 
+        //thinking
+        Thread.sleep(1500);
+
         final var discartedCard = hand.discard(rnd.nextInt(hand.amountOfCards()));
-        talk("Bye bye " + discartedCard);
+        if (openHand)
+        {
+            talk("Bye bye " + discartedCard);
+        }
     }
 
     public void letMePeek() {

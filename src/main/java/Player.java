@@ -1,3 +1,5 @@
+import domainvalue.Level;
+
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.valid4j.Assertive.require;
 
@@ -5,6 +7,7 @@ public class Player {
     protected final String name;
     protected final Hand hand;
     private final boolean isBot;
+    private Level currentLevel;
 
     public Player(final String name) {
         this(name, false);
@@ -17,6 +20,7 @@ public class Player {
         this.name = name;
         this.isBot = isBot;
         this.hand = new Hand();
+        this.currentLevel = new Level(1, Level.Difficulty.EASY);
     }
 
     static Bot newBot() {
@@ -64,7 +68,7 @@ public class Player {
         } else {
             sb.append("[").append(name).append("] ");
         }
-        sb.append(hand);
+        //sb.append(hand);
         return sb.toString();
     }
 
@@ -76,4 +80,10 @@ public class Player {
         return hand.cards()
                 .contains(card);
     }
+
+    public Level currentLevel()
+    {
+        return currentLevel;
+    }
+
 }

@@ -1,5 +1,3 @@
-import domainvalue.Suite;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
@@ -16,34 +14,51 @@ public enum Command {
 
     HELP("help"),
     DRAW("draw"),
+    GOAL("goal"),
     DROP("drop"),
     SORT("sort"),
     DISPLAY("display");
 
     private static final Scanner scanner = new Scanner(System.in);
     private final String value;
-    private final List<String> args;
+    private final List<String> args = new ArrayList<>();
 
     Command(String value) {
         this.value = value;
-        args = new ArrayList<>();
     }
 
     public static Command readCommand() {
         String cmd;
-        List<String> args;
-        do {
+        while (true)
+        {
             System.out.print("What do you want to do? ");
-            final var input = scanner.next().toLowerCase();
-            final var parts = Arrays.asList(input.split(" "));
-            cmd = parts.get(0);
-            args = parts.subList(1, parts.size());
-        } while (!isValid(cmd) && printHelpText());
+            final var input = Arrays.asList(scanner.nextLine().toLowerCase().split("\\s+"));
+            if (input.isEmpty())
+            {
+                continue;
+            }
 
-        final var command = allValueMap().get(cmd);
-        command.args.addAll(args);
+            cmd = input.get(0);
 
-        return command;
+            if (isValid(cmd))
+            {
+                final var command = ofString(cmd);
+                command.args.clear(); // enums are not initialized
+
+                if (input.size() > 1) {
+                    command.args.addAll(input.subList(1, input.size()));
+                }
+
+                return command;
+            }
+
+            printHelpText();
+        }
+    }
+
+    private static Command ofString(final String commandName)
+    {
+        return allValueMap().get(commandName);
     }
 
     @UnmodifiableView
@@ -52,11 +67,9 @@ public enum Command {
         return Collections.unmodifiableList(args);
     }
 
-    // FIXME: HACK
-    private static boolean printHelpText() {
+    private static void printHelpText()
+    {
         System.out.println(helpText());
-
-        return true;
     }
 
     private static List<String> allValueStrings() {

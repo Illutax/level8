@@ -54,7 +54,7 @@ public class App implements CommandLineRunner {
                 if (input.matches(NAME_REGEX))
                 {
                     playerName = Optional.of(input);
-                    System.out.println("Hello " + playerName);
+                    System.out.println("Hello " + playerName + " you play against one bot");
                     break;
                 }
                 else

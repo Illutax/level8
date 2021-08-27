@@ -89,6 +89,16 @@ class HandTest {
         assertThat(hand.discard(0), is(new Card(Suite.PURPLE, 14)));
     }
 
+    @Test
+    void dropFirst() {
+        var hand = makeHand();
+
+        log.info(hand.toString());
+        final var discardedCard = hand.discard(0);
+
+        assertThat(discardedCard, is(new Card(Suite.PURPLE, 14)));
+    }
+
     private Hand makeHand() {
         final var deck = DeckTest.makeDeck();
 

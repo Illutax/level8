@@ -1,10 +1,10 @@
 package tech.dobler.level8;
 
-import tech.dobler.level8.domainvalue.Suite;
-import tech.dobler.level8.domainvalue.Value;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import tech.dobler.level8.domainvalue.Suite;
+import tech.dobler.level8.domainvalue.Value;
 
 import java.util.List;
 import java.util.Optional;
@@ -131,7 +131,7 @@ public class GameState {
                 tryToDiscardPositionalCardAndAdvanceTurn(player, position.get());
             } else
             {
-                talk("Tried to drop \"" + args.get(0) + "\". This does not work; it should be a number between 1 and 15 or the words 'first', 'second', 'last'");
+                talk("Tried to drop \"" + args.get(0) + "\". This does not work; it should be a number between 1 and " + player.hand.amountOfCards() + " or the words 'first', 'second', 'last'");
                 Random tmpRnd = new Random();
                 final var randomPlayerCard = player.hand.cards().get(tmpRnd.nextInt(player.hand.amountOfCards()));
                 talk("You can also drop cards by saying \"drop " + randomPlayerCard.suite() + " " + randomPlayerCard.valueAsInt() + "\"");
@@ -141,14 +141,19 @@ public class GameState {
 
     private void tryToDiscardPositionalCardAndAdvanceTurn(Player player, int cardPositionIndex) {
         // Was it "last"?
-        if (cardPositionIndex == Integer.MAX_VALUE) {
+        if (cardPositionIndex == Integer.MAX_VALUE)
+        {
             final var discardedCard = player.discard(player.hand.lastCardIndex());
             talk("Dropping " + discardedCard);
             advanceTurn();
-        } else if (!(player.hand.amountOfCards() - 1 + 1 >= cardPositionIndex + 1)) {
+        }
+        else if (cardPositionIndex > player.hand.amountOfCards())
+        {
             talk("You don't have as many cards");
-        } else {
-            final var discardedCard = player.discard(cardPositionIndex);
+        }
+        else
+        {
+            final var discardedCard = player.discard(cardPositionIndex - 1);
             talk("Dropping " + discardedCard);
             advanceTurn();
         }
@@ -176,7 +181,8 @@ public class GameState {
         final var argument = args.get(0);
         try {
             int value = Integer.parseInt(argument);
-            if (value < 0 || value > 11) {
+            if (value < 1 || value > 11)
+            {
                 return Optional.empty();
             }
             return Optional.of(value);

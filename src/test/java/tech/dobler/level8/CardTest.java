@@ -15,7 +15,7 @@ class CardTest
 	@Test
 	void testToString()
 	{
-		var card = new Card(Suite.RED, Value.EIGHT);
+		var card = new Card(Suite.RED, 8);
 
 		final var string = card.toString();
 
